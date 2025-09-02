@@ -14,11 +14,21 @@ class Car{
 
         this.useBrain=controlType=="AI";
 
+        // Continuous control values
+        this.throttle=0;   // [0..1]
+        this.brake=0;      // [0..1]
+        this.steer=0;      // [-1..1], +left / -right
+
         if(controlType!="DUMMY"){
             this.sensor=new Sensor(this);
             this.brain=new NeuralNetwork(
-                [this.sensor.rayCount,6,4]
+                [this.sensor.rayCount,12,3]
             );
+        } else {
+            // Keep dummy traffic moving forward
+            this.throttle=1;
+            this.brake=0;
+            this.steer=0;
         }
         this.controls=new Controls(controlType);
 
@@ -48,16 +58,21 @@ class Car{
         }
         if(this.sensor){
             this.sensor.update(roadBorders,traffic);
-            const offsets=this.sensor.readings.map(
+            const inputs=this.sensor.readings.map(
                 s=>s==null?0:1-s.offset
             );
-            const outputs=NeuralNetwork.feedForward(offsets,this.brain);
+            const outputs=NeuralNetwork.feedForward(inputs,this.brain);
 
             if(this.useBrain){
-                this.controls.forward=outputs[0];
-                this.controls.left=outputs[1];
-                this.controls.right=outputs[2];
-                this.controls.reverse=outputs[3];
+                // outputs: [throttle (tanh), steer (tanh), brake (tanh)]
+                this.throttle=(outputs[0]+1)/2; // [0..1]
+                this.steer=outputs[1];          // [-1..1]
+                this.brake=(outputs[2]+1)/2;    // [0..1]
+            }else{
+                // Map keyboard to continuous controls
+                this.throttle=this.controls.forward?1:0;
+                this.brake=this.controls.reverse?1:0;
+                this.steer=(this.controls.left?1:0) + (this.controls.right?-1:0);
             }
         }
     }
@@ -100,12 +115,9 @@ class Car{
     }
 
     #move(){
-        if(this.controls.forward){
-            this.speed+=this.acceleration;
-        }
-        if(this.controls.reverse){
-            this.speed-=this.acceleration;
-        }
+        // Continuous throttle/brake
+        this.speed+=this.acceleration*this.throttle;
+        this.speed-=this.acceleration*this.brake;
 
         if(this.speed>this.maxSpeed){
             this.speed=this.maxSpeed;
@@ -126,12 +138,7 @@ class Car{
 
         if(this.speed!=0){
             const flip=this.speed>0?1:-1;
-            if(this.controls.left){
-                this.angle+=0.03*flip;
-            }
-            if(this.controls.right){
-                this.angle-=0.03*flip;
-            }
+            this.angle+=0.03*flip*this.steer; // analog steering
         }
 
         this.x-=Math.sin(this.angle)*this.speed;

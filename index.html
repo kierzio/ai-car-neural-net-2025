@@ -1,13 +1,48 @@
 <!DOCTYPE html>
 <head>
+    <meta charset="utf-8">
     <title>Self-driving car - No libraries</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="controlPanel">
+        <div class="row">
+            <label for="popSize">Population</label>
+            <input id="popSize" type="number" min="10" max="1000" step="10" />
+        </div>
+        <div class="row">
+            <label for="genSeconds">Generation (s)</label>
+            <input id="genSeconds" type="number" min="5" max="120" step="5" />
+        </div>
+        <div class="row">
+            <label for="mutation">Mutation</label>
+            <input id="mutation" type="number" min="0" max="1" step="0.01" />
+        </div>
+        <div class="row stats">
+            <span>Gen:</span><span id="statGeneration">1</span>
+            <span>Alive:</span><span id="statAlive">0</span>
+            <span>Best:</span><span id="statBest">n/a</span>
+        </div>
+        <div class="row actions">
+            <button onclick="applySettingsFromUI()">Apply & Restart</button>
+            <button onclick="nextGeneration()">Next Generation</button>
+        </div>
+        <div class="tip">
+            Population: number of AI cars per generation. Higher explores more behaviors but runs slower.
+            <br>
+            Generation (s): time limit before evolving (or earlier if most cars crash). Longer gives cars more time to pass; shorter speeds up iterations.
+            <br>
+            Mutation: how much brains change when evolving. Higher explores more (noisier); lower refines (more stable).
+            <br><br>
+            Click Apply & Restart to use the values above. "Next Generation" evolves immediately.
+            <br><br>
+            Middle Save stores the current best brain for reuse on reload; Reset clears it to start fresh.
+        </div>
+    </div>
     <canvas id="carCanvas"></canvas>
     <div id="verticalButtons">
-        <button onclick="save()">💾</button>
-        <button onclick="discard()">🗑️</button>
+        <button onclick="save()" title="Save best model">Save</button>
+        <button onclick="discard()" title="Discard saved model">Reset</button>
     </div>
     <canvas id="networkCanvas"></canvas>
     <script src="visualizer.js"></script>

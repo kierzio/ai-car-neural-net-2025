@@ -1,9 +1,11 @@
 class Sensor{
     constructor(car){
         this.car=car;
-        this.rayCount=5;
-        this.rayLength=150;
-        this.raySpread=Math.PI/2;
+        // Increased perception for overtaking
+        this.rayCount=9;
+        this.rayLength=260;
+        // Wider spread (~225°) to sense sides and some rear
+        this.raySpread=Math.PI*1.25;
 
         this.rays=[];
         this.readings=[];

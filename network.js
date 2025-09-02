@@ -9,11 +9,12 @@ class NeuralNetwork{
     }
 
     static feedForward(givenInputs,network){
+        // Hidden layers use tanh; outputs also tanh for continuous control
         let outputs=Level.feedForward(
-            givenInputs,network.levels[0]);
+            givenInputs,network.levels[0],true);
         for(let i=1;i<network.levels.length;i++){
             outputs=Level.feedForward(
-                outputs,network.levels[i]);
+                outputs,network.levels[i], i < network.levels.length-1);
         }
         return outputs;
     }
@@ -66,7 +67,7 @@ class Level{
         }
     }
 
-    static feedForward(givenInputs,level){
+    static feedForward(givenInputs,level,useTanh){
         for(let i=0;i<level.inputs.length;i++){
             level.inputs[i]=givenInputs[i];
         }
@@ -77,11 +78,13 @@ class Level{
                 sum+=level.inputs[j]*level.weights[j][i];
             }
 
-            if(sum>level.biases[i]){
-                level.outputs[i]=1;
+            // Bias shifts the activation; use tanh for continuous outputs
+            const z=sum - level.biases[i];
+            if(useTanh){
+                level.outputs[i]=Math.tanh(z);
             }else{
-                level.outputs[i]=0;
-            } 
+                level.outputs[i]=Math.tanh(z);
+            }
         }
 
         return level.outputs;
